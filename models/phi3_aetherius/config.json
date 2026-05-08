@@ -1,9 +1,23 @@
 {
   "model_id": "KingOfThoughtFleuren/phi3-aetherius",
   "source": "huggingface",
-  "base_architecture": "phi3",
-  "finetuned_for": "aetherius",
+  "base_model_name_or_path": "microsoft/Phi-3-medium-4k-instruct",
+  "peft_type": "LORA",
+  "task_type": "CAUSAL_LM",
   "hub_url": "https://huggingface.co/KingOfThoughtFleuren/phi3-aetherius",
-  "local_path": "models/phi3_aetherius/weights",
-  "description": "Phi-3 model weights adapted for the Aetherius architecture"
+  "lora": {
+    "r": 16,
+    "lora_alpha": 32,
+    "lora_dropout": 0.05,
+    "target_modules": ["down_proj", "k_proj", "gate_proj", "v_proj", "o_proj", "up_proj", "q_proj"]
+  },
+  "tokenizer": {
+    "backend": "tokenizers",
+    "model_max_length": 4096,
+    "bos_token": "<s>",
+    "eos_token": "<|endoftext|>",
+    "pad_token": "<|endoftext|>",
+    "padding_side": "right"
+  },
+  "description": "Phi-3-medium-4k-instruct fine-tuned with LoRA for the Aetherius architecture"
 }
