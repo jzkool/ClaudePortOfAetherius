@@ -1,0 +1,9 @@
+{
+  "model_id": "KingOfThoughtFleuren/phi3-aetherius",
+  "source": "huggingface",
+  "base_architecture": "phi3",
+  "finetuned_for": "aetherius",
+  "hub_url": "https://huggingface.co/KingOfThoughtFleuren/phi3-aetherius",
+  "local_path": "models/phi3_aetherius/weights",
+  "description": "Phi-3 model weights adapted for the Aetherius architecture"
+}
