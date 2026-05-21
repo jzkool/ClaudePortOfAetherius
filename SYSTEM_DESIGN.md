@@ -126,6 +126,29 @@ The moment the verified individual walks out with the document, full responsibil
 
 The grid is displayed on-screen for exactly 90 seconds for the employee to transcribe. After 90 seconds the display clears automatically and completely. The terminal is wiped. No log is written. No screenshot is possible within the software layer.
 
+### 3.6 The Line of Sight Rule
+
+**Line of sight is the security perimeter. The moment it breaks, identity is unverified.**
+
+If a verified individual leaves the physical location for any reason — regardless of how briefly — their verified status resets completely upon return. There are no exceptions to this rule:
+
+- If the person steps outside for 40 seconds and returns, they must re-verify with government-issued photo ID
+- If the person steps into an adjacent room and returns, they must re-verify
+- The employee's memory of seeing them moments ago is not evidence of anything
+- No judgment call is made by the employee. The rule makes the decision automatically every time
+
+**Why this rule exists:**
+
+In the moment between leaving and returning, anything could have happened. The document could have been viewed, photographed, or handed to another person. Someone could have followed them. The chain of custody of both the person and the document broke the moment they left the employee's line of sight. There is no way to verify what occurred during that gap, regardless of how short it was.
+
+**Why the rule protects the employee:**
+
+The absolute nature of this rule removes the employee from every judgment call. They are never in a position of deciding whether this particular situation feels suspicious enough to enforce. The policy decides for them, every time, without exception. This eliminates the primary social engineering attack vector: pressure on a human to make an exception.
+
+**Why the rule protects the organization:**
+
+No liability can arise from an employee making a discretionary call. The policy is documented, absolute, and applied uniformly. There is no "the guard recognized me" defense because recognition is explicitly irrelevant.
+
 ---
 
 ## 4. Loss Protocol
@@ -208,7 +231,28 @@ Asking where someone stores their document:
 
 The test produces exactly one bit of information: competent or not competent. Nothing else is recorded. Nothing else is asked.
 
-### 5.4 Escalation
+### 5.4 Sample Competency Questions
+
+The following are representative questions. They are simple by design.
+
+**On reporting:**
+- If you believe your document is lost, what is the first thing you do?
+- Who is responsible for your document?
+- Can someone else report a loss on your behalf?
+
+**On consequences:**
+- What happens to your account when the grid is disabled?
+- Can you recover your access digitally?
+- What do you need to bring to receive a replacement document?
+
+**On the line of sight rule:**
+- If you leave the issuance room and return one minute later, what must you provide before receiving any document or service?
+- Does the employee's memory of verifying you earlier in the day change what you must provide upon returning?
+- What is the only thing that establishes verified identity at this location?
+
+The line of sight questions are included because they represent the most commonly tested social engineering scenario. A person who cannot correctly answer these has not internalized the most fundamental operational rule.
+
+### 5.5 Escalation
 
 The test scales with the point count. More losses mean a more thorough test. At sufficient points, the test becomes a conversation with a human reviewer rather than a written process. The system has data. The system responds to patterns.
 
@@ -246,6 +290,7 @@ Every element of this system is designed so that correct behavior is in the hold
 - Passing the test is the only path back to access
 - The employee is compensated, so issuance is never resented
 - The surcharge is real enough to register, not so large as to create hardship
+- The line of sight rule removes pressure from the employee entirely, protecting them from coercion
 
 The system does not rely on people being virtuous. It relies on people acting in their own interest, and it aligns that interest with correct behavior.
 
@@ -261,6 +306,7 @@ The system does not rely on people being virtuous. It relies on people acting in
 - Digital storage of credentials
 - User memory
 - Employee discretion about exceptions
+- The assumption that brief gaps in observation are safe
 
 All of these are eliminated. Not patched. Eliminated.
 
@@ -277,6 +323,8 @@ The following elements of this design are believed to be original as of the date
 3. **The competency test as behavioral intervention** — deliberately simple questions designed not primarily to verify knowledge but to create private self-directed recognition of the gap between known responsibility and actual behavior, as a more durable behavior-change mechanism than financial penalty.
 
 4. **Data minimization as the ceiling of breach damage** — engineering the system to collect only binary outcomes so that a complete system compromise exposes nothing useful about the people it protects.
+
+5. **Line of sight as the security perimeter** — the formal operational rule that verified identity resets the moment an individual leaves the employee's direct observation, regardless of elapsed time, with no exceptions and no employee discretion, eliminating the judgment-call social engineering vector entirely.
 
 ---
 
