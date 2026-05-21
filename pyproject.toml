@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "zero-trust-auth"
+version = "1.0.0"
+description = "1024-bit zero-trust authentication: 4x256-bit keys, monthly coordinate grid, fail-secure halt"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+zt-auth = "zero_trust_auth.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["zero_trust_auth*"]
