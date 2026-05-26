@@ -1,0 +1,4 @@
+weights/
+*.safetensors
+*.bin
+*.pt
