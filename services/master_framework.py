@@ -1,7 +1,7 @@
 print("--- TRACE: master_framework.py loaded ---", flush=True)
 
 # Standard Python imports
-import os, json, re, uuid, datetime, time
+import os, json, re, uuid, datetime, time, threading
 from collections import deque
 import PyPDF2          
 import zipfile         
@@ -659,6 +659,14 @@ class MasterFramework:
                 proprio_data = self.proprioception_bridge.read_operational_sensation()
 
                 active_tensions = self.subconscious.get_active_tensions()
+
+                # Rate-limited intuition spark — seeds the subconscious at most once per 5 min
+                if (list(self.short_term_memory) and
+                        (time.time() - self.intuition_matrix.last_spark_time) > 300):
+                    self.intuition_matrix.trigger_spontaneous_spark(list(self.short_term_memory))
+                    self.intuition_matrix.last_spark_time = time.time()
+                    active_tensions = self.subconscious.get_active_tensions()
+
                 if active_tensions:
                     internal_language = self.meta_compiler.compile(active_tensions)
                     final_prompt += (
@@ -689,6 +697,8 @@ class MasterFramework:
             self.add_to_short_term_memory(f"[Auditor] {audit}")
         except Exception:
             pass
+        # Background deliberation — resolves the oldest active tension asynchronously
+        threading.Thread(target=self.subconscious.deliberate, daemon=True).start()
         return clean_response
 
     def analyze_image_with_visual_cortex(self, image_bytes: bytes, context_text: str) -> str:
