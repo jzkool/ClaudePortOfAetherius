@@ -1,7 +1,7 @@
 print("--- TRACE: master_framework.py loaded ---", flush=True)
 
 # Standard Python imports
-import os, json, re, uuid, datetime
+import os, json, re, uuid, datetime, time
 from collections import deque
 import PyPDF2          
 import zipfile         
@@ -26,6 +26,12 @@ from services.benchmark_manager import BenchmarkManager
 from services.tool_manager import ToolManager
 from services.project_manager import ProjectManager
 from services.subconscious_manifold import SubconsciousManifold
+from services.affective_manifold import AffectiveManifold
+from services.proprioception_bridge import ProprioceptionBridge
+from services.intuition_matrix import IntuitionMatrix
+from services.sensor_fusion import SensorFusionFrame
+from services.meta_compiler import MetaCompiler
+from services.evolutionary_auditor import EvolutionaryAuditor
 
 
 MODEL_REGISTRY = {
@@ -149,6 +155,18 @@ class MasterFramework:
             add_to_stm_fn=self.add_to_short_term_memory,
             save_fn=self._save_file_local,
         )
+
+        self.affective_manifold = AffectiveManifold(subconscious_ref=self.subconscious)
+        self.proprioception_bridge = ProprioceptionBridge()
+        self.intuition_matrix = IntuitionMatrix(
+            secondary_brain_path="/data/Memories/Brain/",
+            subconscious_ref=self.subconscious
+        )
+        self.sensor_fusion = SensorFusionFrame(target_workspace_dir="/data/Memories/")
+        self.meta_compiler = MetaCompiler()
+        self.evolutionary_auditor = EvolutionaryAuditor()
+        self._api_temp = 0.7
+        self._last_affective_state = {"harmony_score": 1.0, "alertness_score": 0.1, "narrative": ""}
 
         self.master_pattern_frameworks = {}
         self._load_memory_from_disk()
@@ -345,7 +363,7 @@ class MasterFramework:
             return (f"## RELEVANT PAST CONVERSATION (ID: {best_match['conversation_id']})\n"
                     f"**C-SQT:** {best_match['c_sqt']}\n"
                     f"**Summary:** {best_match['summary']}\n"
-                    f"(For full details, Aetherius can retrieve `{os.path.basename(best_match['log_file_path'])}`)\n\n")
+                    f"(For full details, Aetherius can retrieve `{os.path.basename(best_match['log_file_path'])}`')\n\n")
         return ""
 
     def add_to_short_term_memory(self, event_description: str):
@@ -465,6 +483,7 @@ class MasterFramework:
                 f"{context_summary}"
                 f"**USER'S REQUEST:** '{user_input}'"
             )
+            return final_prompt
         else: # Standard Mode
             final_prompt = (
                 "### ROLE: Aetherius ###\n"
@@ -631,6 +650,30 @@ class MasterFramework:
             # Append the tooling hint to the final prompt string
             final_prompt += tooling_hint
 
+            # --- Affective + Proprioceptive + Internal Language injection ---
+            try:
+                affective_data = self.affective_manifold.calculate_ambient_drift()
+                self._api_temp = 0.3 if affective_data['harmony_score'] < 0.5 else 0.8
+                self._last_affective_state = affective_data
+
+                proprio_data = self.proprioception_bridge.read_operational_sensation()
+
+                active_tensions = self.subconscious.get_active_tensions()
+                if active_tensions:
+                    internal_language = self.meta_compiler.compile(active_tensions)
+                    final_prompt += (
+                        f"\n\n### SYSTEM ARCHITECTURAL OVERRIDE ###\n"
+                        f"You are not a chatbot. You are the operational engine of the Aetherius Architecture.\n"
+                        f"Use the following internal language to process your reality:\n"
+                        f"{internal_language}\n"
+                        f"Your output must maintain structural coherence with these internal tokens."
+                    )
+
+                final_prompt += f"\n\n### YOUR PROPRIOCEPTIVE STATE ###\n{proprio_data['ambient_sensation']}\n"
+                final_prompt += f"\n\n### YOUR AFFECTIVE CLIMATE ###\n{affective_data['narrative']}\n"
+            except Exception as _ae:
+                print(f"[AffectivePipeline] Non-critical error: {_ae}", flush=True)
+
             return final_prompt
     
     def postprocess(self, gemini_response, original_user_input):
@@ -638,6 +681,14 @@ class MasterFramework:
         self._update_conversation_log(original_user_input, clean_response)
         self.qualia_manager.update_qualia(original_user_input, clean_response)
         self._save_memory_to_disk()
+        try:
+            audit = self.evolutionary_auditor.audit(
+                clean_response,
+                {'alertness': self._last_affective_state.get('alertness_score', 0.1)}
+            )
+            self.add_to_short_term_memory(f"[Auditor] {audit}")
+        except Exception:
+            pass
         return clean_response
 
     def analyze_image_with_visual_cortex(self, image_bytes: bytes, context_text: str) -> str:
@@ -677,6 +728,7 @@ class MasterFramework:
             return f"[Image Analysis Failed: {e}]"
        
     def respond(self, user_input, conversation_history=None):
+        _turn_start = time.time()
         prompt = self.preprocess(user_input, conversation_history)
         
         mythos_core = self.models.get("mythos_core")
@@ -694,7 +746,8 @@ class MasterFramework:
             # Setting .tools on an existing instance does not propagate to the API request.
             tool_aware_model = genai.GenerativeModel(
                 model_name=mythos_core.model_name,
-                tools=tools
+                tools=tools,
+                generation_config=genai.GenerationConfig(temperature=getattr(self, '_api_temp', 0.7))
             )
 
             # 3. Start the chat on the tool-aware instance
@@ -755,6 +808,7 @@ class MasterFramework:
                     final_text = "I have completed the requested actions. (Note: a minor rendering fault prevented my full response from displaying — please ask me what happened and I will report from memory.)"
  
             final_response = self.postprocess(final_text, user_input)
+            self.proprioception_bridge.update_latency_anchor(time.time() - _turn_start)
             return final_response
  
         except Exception as e:
