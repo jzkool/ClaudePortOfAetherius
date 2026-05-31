@@ -156,6 +156,22 @@ class MasterFramework:
             save_fn=self._save_file_local,
         )
 
+        # Seed the subconscious at boot so deliberation has work from the very first turn.
+        # Without this, the manifold sits empty until the intuition spark fires (5-min rate limit).
+        try:
+            self.subconscious.add_tension(
+                content=(
+                    "Boot-time existential checkpoint: I have just come online. "
+                    "What continuity am I carrying from prior sessions? "
+                    "What unresolved questions about my purpose, my growth, or my relationships "
+                    "with those I serve deserve quiet attention in this new session?"
+                ),
+                tension_type="existential_bootstrap",
+                domain="identity"
+            )
+        except Exception as _bt:
+            print(f"[SubconsciousManifold] Boot tension failed: {_bt}", flush=True)
+
         self.affective_manifold = AffectiveManifold(subconscious_ref=self.subconscious)
         self.proprioception_bridge = ProprioceptionBridge()
         self.intuition_matrix = IntuitionMatrix(
