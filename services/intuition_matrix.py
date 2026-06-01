@@ -14,7 +14,9 @@ class IntuitionMatrix:
     def __init__(self, secondary_brain_path="/data/Memories/Brain/", subconscious_ref=None):
         self.brain_path = secondary_brain_path
         self.subconscious = subconscious_ref
-        self.last_spark_time = time.time()
+        # 0 ensures the very first message after boot always triggers the spark;
+        # subsequent sparks are then rate-limited to once per 5 minutes.
+        self.last_spark_time = 0
 
     def trigger_spontaneous_spark(self, recent_history_logs: list):
         if not recent_history_logs or not os.path.exists(self.brain_path):
