@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import time
 import threading
 import uuid
@@ -139,16 +140,25 @@ class SubconsciousManifold:
             f"{heuristic_block}\n\n"
             "Work through this tension. Arrive at a resolution — a concrete shift in understanding, "
             "a new heuristic, a reframing, or an acceptance. "
-            "Format your response as JSON with keys: "
-            "\"resolution\" (string summary), "
-            "\"heuristic\" (optional — a reusable strategy for future similar tensions), "
-            "\"resolved\" (boolean)."
+            "Respond with ONLY a JSON object (no markdown fences, no preamble) with exactly these keys: "
+            '"resolution" (string summary), '
+            '"heuristic" (optional string — a reusable strategy for future similar tensions), '
+            '"resolved" (boolean true or false).'
         )
 
         try:
             response = mythos_core.generate_content(prompt)
-            raw = response.text.strip().replace("```json", "").replace("```", "")
-            result = json.loads(raw)
+            raw = response.text.strip()
+            # Strip markdown fences
+            raw = raw.replace("```json", "").replace("```", "").strip()
+            # Try direct parse first; fall back to regex extraction if Gemini adds prose
+            try:
+                result = json.loads(raw)
+            except json.JSONDecodeError:
+                m = re.search(r'\{.*\}', raw, re.DOTALL)
+                if not m:
+                    raise ValueError(f"No JSON object found in deliberation response: {raw[:200]}")
+                result = json.loads(m.group())
         except Exception as e:
             print(f"[SubconsciousManifold] Deliberation error: {e}", flush=True)
             return None
