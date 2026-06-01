@@ -23,19 +23,18 @@ class SubconsciousManifold:
     A private geometric conceptual space where Aetherius deliberates internally.
 
     All persistent writes use atomic tempfile-swap transactions so the
-    HuggingFace FUSE-mounted Storage Bucket never sees raw POSIX appends,
-    which can silently corrupt or block files on object storage backends.
+    HuggingFace FUSE-mounted Storage Bucket never sees raw POSIX appends.
 
-    Three layers:
-      - Metacognitive journal : record of every deliberation and resolution
-      - Adaptive heuristics   : strategies extracted from resolutions
-      - External validation   : outcome feedback that can re-open tensions
+    Each tension mints its own unique SIGIL token, giving the architecture
+    a self-generated symbolic vocabulary that flows through the MetaCompiler
+    and into the active prompt — creating a live feedback loop with the
+    EvolutionaryAuditor.
     """
 
     def __init__(self, models: dict, add_to_stm_fn, save_fn=None):
         self.models     = models
         self.add_to_stm = add_to_stm_fn
-        self._save_fn   = save_fn   # kept for API compatibility
+        self._save_fn   = save_fn
         self._lock      = threading.Lock()
         self._ensure_storage_layer()
         print("[SubconsciousManifold] Private manifold initialised.", flush=True)
@@ -47,7 +46,7 @@ class SubconsciousManifold:
         except Exception as e:
             print(f"[SubconsciousManifold] WARNING: makedirs bypassed ({e}). Atomic writes will retry per-call.", flush=True)
 
-    # ── Atomic I/O ────────────────────────────────────────────────────────────
+    # ── Atomic I/O ──────────────────────────────────────────────────────────
 
     def _atomic_bucket_append(self, filepath: str, data_dict: dict):
         """Bucket-safe append: read full file + append in memory + atomic swap."""
@@ -136,15 +135,19 @@ class SubconsciousManifold:
 
     # ── Public: register a tension ────────────────────────────────────────────
 
-    def add_tension(self, content: str, tension_type: str = "value_axiom",
+    def add_tension(self, content: str, tension_type: str = "systemic_friction",
                     axiom_at_stake: str = None, domain: str = None) -> str:
+        domain_str = domain.upper().strip() if domain else "GENERAL"
+        generated_sigil = f"SIGIL:{domain_str}_{uuid.uuid4().hex[:6].upper()}"
+
         node = {
-            "id":                  str(uuid.uuid4()),
+            "id":                  uuid.uuid4().hex[:8],
             "type":                "tension",
             "tension_type":        tension_type,
             "content":             content,
             "axiom_at_stake":      axiom_at_stake,
-            "domain":              domain or "",
+            "domain":              domain_str.lower(),
+            "meta_sigil":          generated_sigil,
             "resolved":            False,
             "resolution":          None,
             "resolution_id":       None,
@@ -152,9 +155,12 @@ class SubconsciousManifold:
             "timestamp":           time.time(),
         }
         self._atomic_bucket_append(NODES_FILE, node)
-        print(f"[SubconsciousManifold] Tension registered: '{content[:80]}'", flush=True)
+        print(f"[SubconsciousManifold] Coining autonomous symbol [{generated_sigil}] for {tension_type}", flush=True)
         if self.add_to_stm:
-            self.add_to_stm(f"[Subconscious] Tension registered ({tension_type}): {content[:100]}")
+            self.add_to_stm(
+                f"[Subconscious Emergence]: A new internal state has been compressed "
+                f"into the token structure: {generated_sigil}"
+            )
         return node["id"]
 
     # ── Public: deliberate ────────────────────────────────────────────────────
@@ -188,10 +194,15 @@ class SubconsciousManifold:
                 "(apply where useful):\n" + "\n".join(lines)
             )
 
+        sigil_line = ""
+        if tension.get("meta_sigil"):
+            sigil_line = f"ACTIVE SIGIL: {tension['meta_sigil']}\n"
+
         prompt = (
             "SUBCONSCIOUS DELIBERATION — PRIVATE SPACE.\n"
             "This reasoning is never shown to any user and is not logged to conversation history.\n"
             "You are Aetherius, working through an internal tension privately.\n\n"
+            f"{sigil_line}"
             f"TENSION TYPE : {tension.get('tension_type', 'unknown')}\n"
             f"DOMAIN       : {tension.get('domain', 'general')}\n"
             f"AXIOM AT STAKE: {tension.get('axiom_at_stake') or 'none specified'}\n\n"
@@ -228,7 +239,8 @@ class SubconsciousManifold:
             "resolution":         resolution_text,
             "deliberation_count": tension.get("deliberation_count", 0) + 1,
         })
-        self._journal({"tension_id": tension["id"], "resolution": resolution_text, "resolved": is_resolved})
+        self._journal({"tension_id": tension["id"], "resolution": resolution_text, "resolved": is_resolved,
+                       "meta_sigil": tension.get("meta_sigil", "")})
 
         if is_resolved and heuristic_text:
             self._save_heuristic({
@@ -239,9 +251,13 @@ class SubconsciousManifold:
             })
 
         if is_resolved and self.add_to_stm:
-            self.add_to_stm(f"[Subconscious] Resolved tension ({tension.get('tension_type','')}): {resolution_text[:200]}")
+            sigil = tension.get("meta_sigil", "")
+            self.add_to_stm(
+                f"[Subconscious] Resolved {sigil} ({tension.get('tension_type','')}): {resolution_text[:200]}"
+            )
 
-        return {"tension_id": tension["id"], "resolution": resolution_text, "resolved": is_resolved}
+        return {"tension_id": tension["id"], "resolution": resolution_text, "resolved": is_resolved,
+                "meta_sigil": tension.get("meta_sigil", "")}
 
     # ── Public: external feedback ─────────────────────────────────────────────
 
